@@ -1,0 +1,33 @@
+from flask import Flask, request, jsonify
+import wg_utils  # Ensure this is the correct name of your utility module
+
+app = Flask(__name__)
+
+@app.route('/add-client', methods=['POST'])
+def add_client_endpoint():
+    client_data = request.json
+    allowed_ips = client_data.get('allowed_ips')
+
+    private_key, public_key = wg_utils.generate_wireguard_keys()
+    client_id = wg_utils.generate_client_id()
+    response_message = wg_utils.add_client(public_key, allowed_ips, client_id)
+
+    return jsonify({'client_id': client_id, 'private_key': private_key, 'message': response_message})
+
+@app.route('/list-clients', methods=['GET'])
+def list_clients_endpoint():
+    clients = wg_utils.list_clients()  # This function needs to be defined in your wg_utils module
+    return jsonify({'clients': clients})
+
+@app.route('/remove-client/<client_id>', methods=['DELETE'])
+def remove_client_endpoint(client_id):
+    response_message = wg_utils.remove_client(client_id)  # This function needs to adapt to use client_id
+    return jsonify({'message': response_message})
+
+@app.route('/server-status', methods=['GET'])
+def server_status_endpoint():
+    status = wg_utils.get_server_status()  # This function needs to be defined in your wg_utils module
+    return jsonify({'status': status})
+
+if __name__ == '__main__':
+    app.run(debug=True)
